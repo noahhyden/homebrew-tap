@@ -1,9 +1,9 @@
 class Ataegina < Formula
   desc "Run many git worktrees as live full-stack dev environments, collision-free"
   homepage "https://github.com/noahhyden/ataegina-cli"
-  url "https://github.com/noahhyden/ataegina-cli/releases/download/v1.0.0/ataegina"
+  url "https://github.com/noahhyden/ataegina-cli/releases/download/v1.0.1/ataegina"
   version "0.6.0"
-  sha256 "b572727da9e680e4488e257458488c5e4e7c2dacc2b23e05daa3c32b7daf0690"
+  sha256 "fd2eb5c5812969fc2088b3c5395384a066a32e3734e56e35c0d698849af7578c"
   license "MIT"
 
   depends_on "git"
