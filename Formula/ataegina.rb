@@ -4,7 +4,7 @@ class Ataegina < Formula
   url "https://github.com/noahhyden/ataegina-cli/releases/download/v1.0.1/ataegina"
   version "0.6.0"
   sha256 "fd2eb5c5812969fc2088b3c5395384a066a32e3734e56e35c0d698849af7578c"
-  license "MIT"
+  license "Apache-2.0"
 
   depends_on "git"
 

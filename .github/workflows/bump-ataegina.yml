@@ -1,0 +1,60 @@
+name: Bump ataegina
+
+# Runs in the TAP repo and pushes to the TAP repo, so the built-in GITHUB_TOKEN
+# is enough and no PAT is involved. ataegina-cli is public, so reading its
+# releases needs no auth either.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-ataegina
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rewrite the formula if upstream moved
+        run: |
+          set -euo pipefail
+          formula="Formula/ataegina.rb"
+          repo="noahhyden/ataegina-cli"
+
+          tag="$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" \
+                 | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' \
+                 | head -n1 | sed -E 's/.*"([^"]*)"$/\1/')"
+          [ -n "$tag" ] || { echo "::error::could not resolve the latest tag"; exit 1; }
+          ver="${tag#v}"
+
+          url="https://github.com/$repo/releases/download/$tag/ataegina"
+          curl -fsSL -o /tmp/ataegina "$url"
+          [ -s /tmp/ataegina ] || { echo "::error::empty asset at $url"; exit 1; }
+          sha="$(sha256sum /tmp/ataegina | awk '{print $1}')"
+
+          echo "latest=$tag  sha=$sha"
+
+          sed -i -E "s|^([[:space:]]*url[[:space:]]+\").*(\")|\1$url\2|"       "$formula"
+          sed -i -E "s|^([[:space:]]*sha256[[:space:]]+\").*(\")|\1$sha\2|"    "$formula"
+          sed -i -E "s|^([[:space:]]*version[[:space:]]+\").*(\")|\1$ver\2|"   "$formula"
+
+          ruby -c "$formula"
+
+          grep -E '^[[:space:]]*(url|sha256|version)[[:space:]]+"' "$formula"
+
+          if git diff --quiet -- "$formula"; then
+            echo "formula already at $tag; nothing to do"
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "ataegina $ver" -- "$formula"
+          git push
